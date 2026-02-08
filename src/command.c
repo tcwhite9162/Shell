@@ -8,6 +8,7 @@
 #include "print.h"
 #include "tokenize.h"
 
+
 struct builtin builtins[] = {
     {"ls", builtin_ls},
     {"cp", builtin_cp},
@@ -218,6 +219,91 @@ int builtin_cp(int argc, char* argv[]) {
 }
 
 int builtin_cat(int argc, char* argv[]) {
+    if (argc == 1) {
+        print("cat: missing file operand\n");
+        print("usage: cat <filename>\n");
+        return 0;
+    }
+    if (argc > 2) {
+        print("cat: too many arguments\n");
+        print("usage: cat <filename>\n");
+        return 0;
+    }
+
+    const char* file_path = argv[1];
+    struct stat stat_buf;
+    int stat_ret = stat(file_path, &stat_buf);
+
+    if (stat_ret != 0) {
+        print("cat: no such file: %s\n", file_path);
+        return 0;
+    }
+
+    if (!S_ISREG(stat_buf.st_mode)) {
+        print("error: %s is not a file\n", file_path);
+        return 0;
+    }
+
+    int fd = open(file_path, O_RDONLY);
+    if (fd == -1) {
+        print("cat: cannot open file: %s\n", file_path);
+        return 0;
+    }
+
+    int border_len = 32; // random number that looks good
+    print("─────┬");
+    for (int i = 0; i < border_len; i++) {
+        print("────");
+    }
+    print("\n");
+
+    print("     │ File: %s\n", file_path);
+
+    print("─────┼");
+    for (int i = 0; i < border_len; i++) {
+        print("────");
+    }
+    print("\n");
+
+    const size_t buf_size = 256;
+    char buf[buf_size];
+    ssize_t bytes_read;
+
+    int line = 1;
+    print("%s   %d%s │", START_CYAN, line, END_COLOR);
+
+    while ((bytes_read = read(fd, buf, buf_size)) > 0) {
+        for (int i = 0; i < bytes_read; i++) {
+            char c = buf[i];
+            if (c == '\n') {
+                line++;
+                print("\n");
+                if (line < 10)
+                    print("%s   %d%s │", START_CYAN, line, END_COLOR);
+                else if (line < 100)
+                    print("%s  %d%s │", START_CYAN, line, END_COLOR);
+                else if (line < 1000)
+                    print("%s %d%s │", START_CYAN, line, END_COLOR);
+                else
+                    print("%s%d%s │", START_CYAN, line, END_COLOR);
+            }
+            else {
+                print("%c", c);
+            }
+        }
+    }
+    print("\n");
+    print("─────┴");
+    for (int i = 0; i < border_len; i++) {
+        print("────");
+    }
+    print("\n");
+
+    if (bytes_read < 0) {
+        print("cat: error reading file: %s\n", file_path);
+    }
+
+    close(fd);
     return 0;
 }
 

@@ -9,7 +9,7 @@ int main() {
     char* argv[MAX_TOKENS];
 
     while (1) {
-        print(" > ");
+        print(" ❯ ");
 
         ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
         if (n <= 0)
