@@ -14,11 +14,6 @@ size_t str_len(const char* s) {
     return len;
 }
 
-void print(const char* s) {
-    if (s == NULL) return;
-    write(STDOUT_FILENO, s, str_len(s));
-}
-
 void print_int(long n) {
     if (n == 0) {
         write(STDOUT_FILENO, "0", 1);
@@ -77,7 +72,7 @@ void print_char(char c) {
     write(STDOUT_FILENO, &c, 1);
 }
 
-void format_print(const char* fmt, ...) {
+void print(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 

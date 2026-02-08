@@ -6,7 +6,7 @@ let VM_mouse_mappings =  0
 let VM_default_mappings =  1 
 let VM_persistent_registers =  0 
 let VM_highlight_matches = "underline"
-let BufferlinePositions = "[\"/home/tcwhite/Projects/C-C++/shell/src/command.c\",\"/home/tcwhite/Projects/C-C++/shell/src/command.h\",\"/home/tcwhite/Projects/C-C++/shell/src/main.c\",\"/home/tcwhite/Projects/C-C++/shell/src/print.c\",\"/home/tcwhite/Projects/C-C++/shell/src/print.h\",\"/home/tcwhite/Projects/C-C++/shell/src/tokenize.c\",\"/home/tcwhite/Projects/C-C++/shell/src/tokenize.h\",\"/home/tcwhite/Projects/C-C++/shell/Makefile\"]"
+let BufferlinePositions = "[\"/home/tcwhite/Projects/C-C++/shell/src/main.c\",\"/home/tcwhite/Projects/C-C++/shell/src/command.c\",\"/home/tcwhite/Projects/C-C++/shell/src/command.h\",\"/home/tcwhite/Projects/C-C++/shell/Makefile\",\"/home/tcwhite/Projects/C-C++/shell\"]"
 silent only
 silent tabonly
 cd ~/Projects/C-C++/shell
@@ -19,13 +19,12 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +23 ~/Projects/C-C++/shell/Makefile
-badd +55 ~/Projects/C-C++/shell/src/command.c
-badd +17 ~/Projects/C-C++/shell/src/command.h
-badd +13 ~/Projects/C-C++/shell/src/main.c
+badd +185 ~/Projects/C-C++/shell/src/command.c
+badd +20 ~/Projects/C-C++/shell/src/command.h
+badd +29 ~/Projects/C-C++/shell/src/main.c
 argglobal
 %argdel
-$argadd .
+$argadd ./
 edit ~/Projects/C-C++/shell/src/command.c
 wincmd t
 let s:save_winminheight = &winminheight
@@ -44,16 +43,24 @@ setlocal foldlevel=99
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-26
+41
 sil! normal! zo
-39
+54
 sil! normal! zo
-let s:l = 55 - ((21 * winheight(0) + 23) / 47)
+80
+sil! normal! zo
+100
+sil! normal! zo
+155
+sil! normal! zo
+203
+sil! normal! zo
+let s:l = 185 - ((25 * winheight(0) + 23) / 46)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 55
-normal! 015|
+keepjumps 185
+normal! 022|
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

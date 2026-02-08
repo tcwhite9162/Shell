@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <syscall.h>
 #include <unistd.h>
@@ -16,6 +17,8 @@ struct builtin builtins[] = {
     {"echo", builtin_echo},
     {"pwd", builtin_pwd},
     {"mkdir", builtin_mkdir},
+    {"touch", builtin_touch},
+    {"cat", builtin_cat},
     {NULL, NULL},
 };
 
@@ -29,9 +32,15 @@ int builtin_clear(int argc, char* argv[]) {
 int builtin_pwd(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    const char* cwd = getcwd(NULL, 0);
-    format_print("%s\n", cwd);
 
+    char* cwd = getcwd(NULL, 0);
+    if (!cwd) {
+        print("pwd: error getting current directory\n");
+        return 0;
+    }
+    print("%s\n", cwd);
+
+    free(cwd);
     return 0;
 }
 
@@ -49,31 +58,54 @@ int builtin_echo(int argc, char* argv[]) {
 }
 
 int builtin_mkdir(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
-
     if (argc <= 1) {
         print("mkdir: missing operand\n");
         print("usage: mkdir <directory-name>\n");
         return 0;
     }
 
-    mode_t init_mode   = 0777;
-    mode_t target_mode = 0755;
+    mode_t target_mode = 0755; // drwxr-xr-x
 
-    int mkdir_ret = mkdir(argv[1], init_mode);
+    int mkdir_ret = mkdir(argv[1], target_mode);
     if (mkdir_ret != 0) {
-        format_print("mkdir error: return value (%d)", mkdir_ret);
+        print("mkdir error: return value (%d)\n", mkdir_ret);
         return 0;
     }
 
-    int chmod_ret = chmod(argv[1], target_mode);
+    print("successfuly created directory: %s with permissions rwxr-xr-x (755)\n", argv[1]);
+    return 0;
+}
+
+int create_file(const char* file_path) {
+    mode_t init_mode   = 0777; // -rwxrwxrwx
+    mode_t target_mode = 0644; // -rw-r--r--
+
+    int open_ret = open(file_path, O_CREAT | O_WRONLY, init_mode);
+    if (open_ret == -1) {
+        print("error creating file: %s\n", file_path);
+        return -1;
+    }
+    close(open_ret);
+
+    int chmod_ret = chmod(file_path, target_mode);
     if (chmod_ret != 0) {
-        format_print("chmod error: return value (%d)", chmod_ret);
+        print("chmod error: return value (%d)\n", chmod_ret);
+        return -1;
+    }
+
+    print("successfuly created file: %s\n", file_path);
+    return 0;
+}
+
+int builtin_touch(int argc, char* argv[]) {
+    if (argc <= 1) {
+        print("touch: missing operand\n");
+        print("usage: touch <file-name>\n");
         return 0;
     }
 
-    format_print("successfuly created directory %s with permissions rwxr-xr-x (755)\n", argv[1]);
+    create_file(argv[1]);
+
     return 0;
 }
 
@@ -84,14 +116,15 @@ int builtin_ls(int argc, char* argv[]) {
     else
         path = ".";
 
-    int path_fd = open(path, O_RDONLY | O_DIRECTORY);
+    const int path_fd = open(path, O_RDONLY | O_DIRECTORY);
     if (path_fd < 0) {
-        format_print("ls: could not open path '%s'\n", path);
+        print("ls: could not open path '%s'\n", path);
         return 0;
     }
 
-    char buf[1024];
-    int n_read = syscall(SYS_getdents, path_fd, buf, sizeof(buf));
+    const size_t buf_size = 4096;
+    char buf[buf_size];
+    int n_read = syscall(SYS_getdents, path_fd, buf, buf_size);
 
     if (n_read == -1) {
         print("ls: SYS_getdents failed\n");
@@ -112,10 +145,79 @@ int builtin_ls(int argc, char* argv[]) {
     return 0;
 }
 
+int file_exists(const char* file_path) {
+    struct stat buf;
+    return stat(file_path, &buf) == 0;
+}
+
 int builtin_cp(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
-    print("running: cp\n");
+    if (argc == 1) {
+        print("cp: missing source file\n");
+        print("usage: cp <source-file> <destination-file>\n");
+        return 0;
+    }
+    if (argc == 2) {
+        print("cp: missing file destination\n");
+        print("usage: cp <source-file> <destination-file>\n");
+        return 0;
+    }
+
+    const char* src_path = argv[1];
+    const char* dst_path = argv[2];
+
+    if (!file_exists(src_path)) {
+        print("cp: cannot copy %s, no such file\n", src_path);
+        return 0;
+    }
+    if (file_exists(dst_path)) {
+        print("cp: file: %s already exists\n", dst_path);
+        return 0;
+    }
+
+    if (create_file(dst_path) != 0)
+        return 0;
+
+    print("copying file ...\n");
+
+    const int src_fd = open(src_path, O_RDONLY);
+    if (src_fd == -1) {
+        print("error open source file: %s\n", src_path);
+        return 0;
+    }
+
+    const int dst_fd = open(dst_path, O_WRONLY);
+    if (dst_fd == -1) {
+        print("error open destination file: %s\n", dst_path);
+        close(src_fd);
+        return 0;
+    }
+
+    const size_t buf_size = 256;
+
+    char buf[buf_size];
+    ssize_t bytes_read;
+
+    while (1) {
+        bytes_read = read(src_fd, buf, buf_size);
+        if (bytes_read > 0) {
+            write(dst_fd, buf, bytes_read);
+        }
+        else if (bytes_read == 0) {
+            break;
+        }
+        else {
+            print("cp: error while reading %s\n", src_path);
+            break;
+        }
+    }
+
+    close(src_fd);
+    close(dst_fd);
+
+    return 0;
+}
+
+int builtin_cat(int argc, char* argv[]) {
     return 0;
 }
 
@@ -142,6 +244,7 @@ int run_builtin(int argc, char* argv[]) {
 }
 
 void run_external(int argc, char* argv[]) {
-    (void)argc; // silence unused warnings
+    (void)argc;
     (void)argv;
+    // TODO: write this
 }

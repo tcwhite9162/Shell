@@ -17,6 +17,8 @@ int builtin_clear(int argc, char* argv[]);
 int builtin_echo(int argc, char* argv[]);
 int builtin_pwd(int argc, char* argv[]);
 int builtin_mkdir(int argc, char* argv[]);
+int builtin_touch(int argc, char* argv[]);
+int builtin_cat(int argc, char* argv[]);
 
 typedef int (*builtin_fn)(int argc, char* argv[]);
 
