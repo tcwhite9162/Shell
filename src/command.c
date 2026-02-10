@@ -4,10 +4,9 @@
 #include <syscall.h>
 #include <unistd.h>
 
-#include "command.h"
-#include "print.h"
-#include "tokenize.h"
-
+#include "include/command.h"
+#include "include/print.h"
+#include "include/tokenize.h"
 
 struct builtin builtins[] = {
     {"ls", builtin_ls},
@@ -304,13 +303,6 @@ int builtin_cat(int argc, char* argv[]) {
     }
 
     close(fd);
-    return 0;
-}
-
-int builtin_grep(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
-    print("running: grep\n");
     return 0;
 }
 

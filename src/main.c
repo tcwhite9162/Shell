@@ -1,8 +1,8 @@
 #include <unistd.h>
 
-#include "print.h"
-#include "tokenize.h"
-#include "command.h"
+#include "include/print.h"
+#include "include/tokenize.h"
+#include "include/command.h"
 
 int main() {
     char buf[256];
