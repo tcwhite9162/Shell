@@ -1,11 +1,12 @@
-#include <unistd.h>
-#include <stdarg.h>
 #include <limits.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 #include "include/print.h"
 
 size_t str_len(const char* s) {
-    if (s == NULL) return 0;
+    if (s == NULL)
+        return 0;
 
     size_t len = 0;
     while (s[len] != '\0') {
@@ -51,7 +52,7 @@ void print_float(double n, int dp) {
         n = -n;
     }
 
-    long whole = (long)n;
+    long whole     = (long)n;
     double decimal = n - (double)whole;
 
     print_int(whole);
@@ -62,7 +63,7 @@ void print_float(double n, int dp) {
     for (int i = 0; i < dp; i++) {
         decimal *= 10;
         int digit = (int)decimal;
-        char c = '0' + digit;
+        char c    = '0' + digit;
         write(STDOUT_FILENO, &c, 1);
         decimal -= digit;
     }
@@ -93,7 +94,7 @@ void print(const char* fmt, ...) {
             }
             else if (spec == 'f') {
                 double f = va_arg(args, double);
-                print_float(f,-1);
+                print_float(f, -1);
             }
             else if (spec == 'c') {
                 char c = (char)va_arg(args, int);
@@ -101,7 +102,7 @@ void print(const char* fmt, ...) {
             }
             else if (spec == 's') {
                 char* s = va_arg(args, char*);
-                print(s);
+                write(STDOUT_FILENO, s, str_len(s));
             }
             else if (spec == '%') {
                 print_char('%');

@@ -20,6 +20,8 @@ int builtin_mkdir(int argc, char* argv[]);
 int builtin_touch(int argc, char* argv[]);
 int builtin_cat(int argc, char* argv[]);
 
+int get_dirents(const int path_fd, const char buf[], const int buf_size);
+
 typedef int (*builtin_fn)(int argc, char* argv[]);
 
 struct builtin {

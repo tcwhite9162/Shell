@@ -25,17 +25,34 @@ int tokenize(char* input, char* argv[]) {
         if (*input == '\0')
             break;
 
-        argv[argc++] = input;
+        char* start = input;
 
-        if (argc >= MAX_TOKENS - 1)
-            break;
+        if (*input == '"' || *input == '\'') {
+            char quote = *input++;
+            start      = input;
 
-        while (*input != '\0' && *input != ' ' && *input != '\t' && *input != '\n')
-            input++;
+            while (*input != '\0' && *input != quote)
+                input++;
 
-        if (*input != '\0') {
-            *input = '\0';
-            input++;
+            if (*input == quote) {
+                *input = '\0';
+                input++;
+            }
+
+            argv[argc++] = start;
+        }
+        else {
+            start = input;
+
+            while (*input != '\0' && *input != ' ' && *input != '\t' && *input != '\n')
+                input++;
+
+            if (*input != '\0') {
+                *input = '\0';
+                input++;
+            }
+
+            argv[argc++] = start;
         }
     }
 

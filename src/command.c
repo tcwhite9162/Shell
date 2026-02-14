@@ -109,42 +109,6 @@ int builtin_touch(int argc, char* argv[]) {
     return 0;
 }
 
-int builtin_ls(int argc, char* argv[]) {
-    const char* path;
-    if (argc > 1)
-        path = argv[1];
-    else
-        path = ".";
-
-    const int path_fd = open(path, O_RDONLY | O_DIRECTORY);
-    if (path_fd < 0) {
-        print("ls: could not open path '%s'\n", path);
-        return 0;
-    }
-
-    const size_t buf_size = 4096;
-    char buf[buf_size];
-    int n_read = syscall(SYS_getdents, path_fd, buf, buf_size);
-
-    if (n_read == -1) {
-        print("ls: SYS_getdents failed\n");
-        return 0;
-    }
-
-    int idx = 0;
-    while (idx < n_read) {
-        struct linux_dirent* d = (struct linux_dirent*)(buf + idx);
-        print(d->d_name);
-        print("\n");
-
-        idx += d->d_reclen;
-    }
-
-    close(path_fd);
-
-    return 0;
-}
-
 int file_exists(const char* file_path) {
     struct stat buf;
     return stat(file_path, &buf) == 0;
